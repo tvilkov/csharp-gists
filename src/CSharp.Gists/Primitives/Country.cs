@@ -6,7 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace CSharp.Gists.Primivitives
+namespace CSharp.Gists.Primitives
 {
     [Serializable]
     [StructLayout(LayoutKind.Sequential)]

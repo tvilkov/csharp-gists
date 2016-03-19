@@ -39,9 +39,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Primivitives\Country.cs" />
-    <Compile Include="Primivitives\CountryFormat.cs" />
-    <Compile Include="Primivitives\CountryStrings.Designer.cs">
+    <Compile Include="Primitives\Country.cs" />
+    <Compile Include="Primitives\CountryFormat.cs" />
+    <Compile Include="Primitives\CountryStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>CountryStrings.resx</DependentUpon>
@@ -49,7 +49,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Primivitives\CountryStrings.resx">
+    <EmbeddedResource Include="Primitives\CountryStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>CountryStrings.Designer.cs</LastGenOutput>
     </EmbeddedResource>

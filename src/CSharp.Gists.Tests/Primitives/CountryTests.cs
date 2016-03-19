@@ -1,4 +1,7 @@
-﻿using CSharp.Gists.Primivitives;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using CSharp.Gists.Primitives;
 using NUnit.Framework;
 
 namespace CSharp.Gists.Tests.Primitives
@@ -60,6 +63,21 @@ namespace CSharp.Gists.Tests.Primitives
             Assert.That(c.IsoCode, Is.EqualTo(expectedIsoCode));
             Assert.That(c.NumericCode, Is.EqualTo(expectedNumericCode));
             Assert.That(c.IsValid, Is.EqualTo(expectedIsValid));
+        }
+
+        [Test, TestCaseSource(typeof(CountryTests), "CanImpicitlyConvertToStringTestCases")]
+        public void CanImpicitlyConvertToString(Country country, string expectedIsoCode)
+        {
+            string str = country;
+            Assert.AreEqual(str, expectedIsoCode);
+        }
+
+        protected static IEnumerable<TestCaseData> CanImpicitlyConvertToStringTestCases
+        {
+            get
+            {
+                return "RUS,UKR,BLR,USA".Split(',').Select(c => new TestCaseData(Country.Create(c), c).SetName(c)).ToArray();
+            }
         }
     }
 }

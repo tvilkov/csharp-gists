@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace CSharp.Gists.Primivitives {
+namespace CSharp.Gists.Primitives {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace CSharp.Gists.Primivitives {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CSharp.Gists.Primivitives.CountryStrings", typeof(CountryStrings).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("CSharp.Gists.Primitives.CountryStrings", typeof(CountryStrings).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;

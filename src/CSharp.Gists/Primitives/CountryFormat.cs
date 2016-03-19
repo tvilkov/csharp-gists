@@ -1,7 +1,7 @@
 using System;
 using System.Globalization;
 
-namespace CSharp.Gists.Primivitives
+namespace CSharp.Gists.Primitives
 {
     internal static class CountryFormat
     {
