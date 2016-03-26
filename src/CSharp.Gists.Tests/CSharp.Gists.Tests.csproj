@@ -49,6 +49,7 @@
     <Compile Include="Primitives\CountryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tasks\TaskExtensionsTests.cs" />
+    <Compile Include="Tasks\TaskThrottleTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CSharp.Gists\CSharp.Gists.csproj">
