@@ -7,13 +7,14 @@ namespace CSharp.Gists.Tasks
 {
     /// <summary>
     /// Provides throttling capabilities for tasks.
+    /// TODO[tv]: Introduce different throttle strategies (tasks per minute, for instance)
     /// </summary>
     [DebuggerDisplay("Throttle: {ActiveTaskCount} active tasks of {m_ConcurencyLimit} allowed")]
     class TaskThrottle : IDisposable
     {
         private readonly int m_ConcurencyLimit;
         private SemaphoreSlim m_Semaphore;
-        private CancellationTokenSource m_CancellationTokenSource;
+        private CancellationTokenSource m_DisposeCancellationTokenSource;
 
         public TaskThrottle(int concurencyLimit)
         {
@@ -31,51 +32,62 @@ namespace CSharp.Gists.Tasks
         private void ensureInitialized()
         {
             LazyInitializer.EnsureInitialized(ref m_Semaphore, () => new SemaphoreSlim(m_ConcurencyLimit));
-            LazyInitializer.EnsureInitialized(ref m_CancellationTokenSource, () => new CancellationTokenSource());
+            LazyInitializer.EnsureInitialized(ref m_DisposeCancellationTokenSource, () => new CancellationTokenSource());
         }
 
-        public Task<T> Throttle<T>(Func<T> action)
+        public void Throttle(Action action, CancellationToken cancellationToken = default (CancellationToken))
         {
             if (action == null) throw new ArgumentNullException("action");
 
-            return Throttle(() => Task.Factory.StartNew(action), CancellationToken.None);
+            ThrottleCore(cancellationToken);
+
+            action();
         }
 
-        public Task<T> Throttle<T>(Func<T> action, CancellationToken cancellationToken)
+        public T Throttle<T>(Func<T> action, CancellationToken cancellationToken = default (CancellationToken))
         {
             if (action == null) throw new ArgumentNullException("action");
 
-            return Throttle(() => Task.Factory.StartNew(action), cancellationToken);
+            ThrottleCore(cancellationToken);
+
+            return action();
         }
 
-        public Task Throttle(Action action)
+        protected void ThrottleCore(CancellationToken cancellationToken)
+        {
+            ensureInitialized();
+
+            var signalled = WaitHandle.WaitAny(new[]
+                {
+                    m_DisposeCancellationTokenSource.Token.WaitHandle,
+                    cancellationToken.WaitHandle,
+                    m_Semaphore.AvailableWaitHandle
+                });
+            if (signalled == 0) throw new ObjectDisposedException("Throttle was disposed");
+            if (signalled == 1) throw new TaskCanceledException("The task was cancelled");
+        }
+
+        public Task ThrottleAsync(Action action, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (action == null) throw new ArgumentNullException("action");
 
-            return Throttle(() => Task.Factory.StartNew(action), CancellationToken.None);
+            return ThrottleAsync(() => Task.Factory.StartNew(action), cancellationToken);
         }
 
-        public Task Throttle(Action action, CancellationToken cancellationToken)
+        public Task<T> ThrottleAsync<T>(Func<T> action, CancellationToken cancellationToken = default(CancellationToken))
         {
             if (action == null) throw new ArgumentNullException("action");
 
-            return Throttle(() => Task.Factory.StartNew(action), cancellationToken);
+            return ThrottleAsync(() => Task.Factory.StartNew(action), cancellationToken);
         }
 
-        public Task Throttle(Func<Task> actionFactory)
-        {
-            if (actionFactory == null) throw new ArgumentNullException("actionFactory");
-
-            return Throttle(actionFactory, CancellationToken.None);
-        }
-
-        public async Task Throttle(Func<Task> actionFactory, CancellationToken cancellationToken)
+        public async Task ThrottleAsync(Func<Task> actionFactory, CancellationToken cancellationToken = default (CancellationToken))
         {
             if (actionFactory == null) throw new ArgumentNullException("actionFactory");
 
             ensureInitialized();
 
-            using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(m_CancellationTokenSource.Token, cancellationToken))
+            using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(m_DisposeCancellationTokenSource.Token, cancellationToken))
             {
                 await m_Semaphore.WaitAsync(tokenSource.Token);
                 try
@@ -92,20 +104,13 @@ namespace CSharp.Gists.Tasks
             }
         }
 
-        public Task<T> Throttle<T>(Func<Task<T>> actionFactory)
-        {
-            if (actionFactory == null) throw new ArgumentNullException("actionFactory");
-
-            return Throttle(actionFactory, CancellationToken.None);
-        }
-
-        public async Task<T> Throttle<T>(Func<Task<T>> actionFactory, CancellationToken cancellationToken)
+        public async Task<T> ThrottleAsync<T>(Func<Task<T>> actionFactory, CancellationToken cancellationToken = default (CancellationToken))
         {
             if (actionFactory == null) throw new ArgumentNullException("actionFactory");
 
             ensureInitialized();
 
-            using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(m_CancellationTokenSource.Token, cancellationToken))
+            using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(m_DisposeCancellationTokenSource.Token, cancellationToken))
             {
                 await m_Semaphore.WaitAsync(tokenSource.Token);
                 try
@@ -125,7 +130,7 @@ namespace CSharp.Gists.Tasks
 
         public void Dispose()
         {
-            m_CancellationTokenSource.Cancel();
+            m_DisposeCancellationTokenSource.Cancel();
             m_Semaphore.Dispose();
         }
     }

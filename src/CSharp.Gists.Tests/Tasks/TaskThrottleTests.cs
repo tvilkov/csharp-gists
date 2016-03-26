@@ -12,7 +12,7 @@ namespace CSharp.Gists.Tests.Tasks
     public class TaskThrottleTests
     {
         [Test]
-        public async void CanThrottle()
+        public async void CanThrottleAsync()
         {
             const int concurrentTaskCount = 20;
             const int concurencyLimit = 5;
@@ -39,7 +39,7 @@ namespace CSharp.Gists.Tests.Tasks
             Parallel.For(0, concurrentTaskCount, new ParallelOptions { MaxDegreeOfParallelism = 3 }, i =>
                 {
                     var taskNumber = i + 1;
-                    var task = throttle.Throttle(() =>
+                    var task = throttle.ThrottleAsync(() =>
                         {
                             Debug.WriteLine("Task {0} started", taskNumber);
                             Interlocked.Increment(ref runningTaskCount);
