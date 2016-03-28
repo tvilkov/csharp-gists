@@ -42,6 +42,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dynamic\DynamicXAttribute.cs" />
+    <Compile Include="Dynamic\DynamicXElementBase.cs" />
+    <Compile Include="Dynamic\DynamicXElementReader.cs" />
+    <Compile Include="Dynamic\DynamicXElementExtensions.cs" />
+    <Compile Include="Dynamic\DynamicXElementWriter.cs" />
     <Compile Include="Primitives\Country.cs" />
     <Compile Include="Primitives\CountryFormat.cs" />
     <Compile Include="Primitives\CountryStrings.Designer.cs">
