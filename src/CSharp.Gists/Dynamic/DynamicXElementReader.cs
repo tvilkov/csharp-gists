@@ -31,7 +31,7 @@ namespace CSharp.Gists.Dynamic
                 return true;
             }
 
-            throw new InvalidOperationException(string.Format("Element '{0}' not found among subelements of '{1}'", binder.Name, InnerElement.Name));
+            throw new InvalidOperationException(string.Format("Element '{0}' not found among subelements of '{1}'", binder.Name, InnerElement.Name.LocalName));
         }
 
         public dynamic this[XName name]
