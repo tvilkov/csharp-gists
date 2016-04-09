@@ -64,7 +64,11 @@ namespace CSharp.Gists.Dynamic
                 Debug.Assert(parent != null);
 
                 // Return element with the same tag name at index position
-                var subElement = parent.Elements(InnerElement.Name).ElementAt(index);
+                var subElement = parent.Elements(InnerElement.Name).ElementAtOrDefault(index);
+
+                if (subElement == null)
+                    throw new ArgumentOutOfRangeException(string.Format("The is not element at index {0}", index));
+
                 Debug.Assert(subElement != null);
 
                 return subElement.AsDynamic();

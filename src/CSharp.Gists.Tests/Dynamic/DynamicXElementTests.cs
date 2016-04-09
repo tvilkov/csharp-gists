@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Xml.Linq;
 using CSharp.Gists.Dynamic;
@@ -12,7 +13,7 @@ namespace CSharp.Gists.Tests.Dynamic
 {
     public class DynamicXElementTests
     {
-        [TestFixture(Category = "Reader", Description = "Dynamic XElement reader tests")]
+        [TestFixture(Category = "Reader", Description = "Dynamic XElementReader tests")]
         public class ReaderTests
         {
             [SetUp]
@@ -235,6 +236,146 @@ namespace CSharp.Gists.Tests.Dynamic
                 Assert.That((double)dyn.food[2].price, Is.EqualTo(8.95));
                 Assert.That((int)dyn.food[2].calories, Is.EqualTo(900));
                 Assert.That((string)dyn.food[2].category["ref"], Is.EqualTo("desert"));
+            }
+        }
+
+        [TestFixture(Category = "Writer", Description = "Dynamic XElementWriter tests")]
+        public class WriterTests
+        {
+            [SetUp]
+            public void Setup()
+            {
+                Thread.CurrentThread.CurrentUICulture = CultureInfo.InvariantCulture;
+            }
+
+            [Test]
+            public void CanCreateDynamicWriter()
+            {
+                var elem = new XElement("Root");
+                dynamic dyn = DynamicXElementWriter.CreateInstance(elem);
+
+                Assert.IsNotNull(dyn);
+            }
+
+            [Test]
+            public void CreateFromNullXElementShouldFail()
+            {
+                var ex = Assert.Throws<ArgumentNullException>(() => DynamicXElementWriter.CreateInstance(default(XElement)));
+                Assert.IsNotNull(ex);
+                Assert.AreEqual("element", ex.ParamName);
+            }
+
+            [Test]
+            public void CanChangeExistingElement()
+            {
+                var xelem = new XElement("root", "value");
+                var writer = xelem.AsDynamicWriter();
+
+                // Using writer = "2" would be better but unfortunatelly we can't do it
+                writer.SetValue("newValue");
+
+                Assert.AreEqual("newValue", xelem.Value);
+            }
+
+            [Test]
+            public void CanChangeExistingSubElement()
+            {
+                var subItem = new XElement("item", "value");
+                var xelem = new XElement("root", subItem);
+                var writer = xelem.AsDynamicWriter();
+
+                // Using writer.item = "2" would be better but unfortunatelly we can't do it
+                writer.item.SetValue("newValue");
+
+                Assert.That(subItem.Value, Is.EqualTo("newValue"));
+            }
+
+            [Test]
+            public void CanInsertNewSubElement()
+            {
+                var xelem = new XElement("root");
+                var writer = xelem.AsDynamicWriter();
+                writer.item = "newValue";
+
+                var insertedElem = xelem.Element("item");
+
+                Assert.IsNotNull(insertedElem);
+                Assert.AreEqual("newValue", insertedElem.Value);
+            }
+
+            [Test]
+            public void CanInsertSeveralNewSubElements()
+            {
+                var xelem = new XElement("root");
+                var writer = xelem.AsDynamicWriter();
+                writer.item[0] = "item0";
+                writer.item[1] = "item1";
+                writer.item[2] = "item2";
+
+                var insertedElem1 = xelem.Elements("item").First();
+                var insertedElem2 = xelem.Elements("item").Skip(1).First();
+                var insertedElem3 = xelem.Elements("item").Skip(2).First();
+
+                Assert.AreEqual("item0", insertedElem1.Value);
+                Assert.AreEqual("item1", insertedElem2.Value);
+                Assert.AreEqual("item2", insertedElem3.Value);
+            }
+
+            [Test]
+            public void CanInsertChainOfNewSubElements()
+            {
+                var xelem = new XElement("root");
+                var writer = xelem.AsDynamicWriter();
+                writer.item.subItemLevel1.subItemLevel2.subItemLevel3 = "newValue";
+
+                var insertedElem = xelem.Element("item")
+                                        .Element("subItemLevel1")
+                                        .Element("subItemLevel2")
+                                        .Element("subItemLevel3");
+
+                Assert.IsNotNull(insertedElem);
+                Assert.AreEqual("newValue", insertedElem.Value);
+            }
+
+            [Test]
+            public void CanInsertSeveralSubElementsUsingIndexer()
+            {
+                var xelem = new XElement("root");
+                var writer = xelem.AsDynamicWriter();
+                writer.item[0].subItem = "item0";
+                writer.item[1].subItem = "item1";
+
+                var insertedElem1 = xelem.Elements("item").First().Element("subItem");
+                var insertedElem2 = xelem.Elements("item").Skip(1).First().Element("subItem");
+
+                Assert.IsNotNull(insertedElem1);
+                Assert.IsNotNull(insertedElem2);
+                Assert.AreEqual("item0", insertedElem1.Value);
+                Assert.AreEqual("item1", insertedElem2.Value);
+            }
+
+            [Test]
+            public void CanChangeExistingAttribute()
+            {
+                var xelem = new XElement("root", new XAttribute("id", "value"));
+                var writer = xelem.AsDynamicWriter();
+                writer["id"] = "newValue";
+
+                Assert.AreEqual("newValue", xelem.Attribute("id").Value);
+            }
+
+            [Test]
+            public void CanInsertNewAttribute()
+            {
+                var xelem = new XElement("root");
+                var writer = xelem.AsDynamicWriter();
+                writer["id"] = "newValue";
+                writer["int"] = 123;
+                writer["double"] = 123.1234567;
+
+                Assert.AreEqual("newValue", xelem.Attribute("id").Value);
+                Assert.AreEqual(123, (int)xelem.Attribute("int"));
+                Assert.AreEqual(123.1234567, (double)xelem.Attribute("double"));
             }
         }
     }

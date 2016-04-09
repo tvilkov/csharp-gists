@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.Dynamic;
 using System.Linq;
 using System.Xml.Linq;
@@ -91,12 +90,24 @@ namespace CSharp.Gists.Dynamic
         {
             get
             {
-                if (index < 0 || index >= InnerElement.Elements().Count())
-                    throw new IndexOutOfRangeException("Index out of range");
+                if (index < 0) throw new ArgumentOutOfRangeException("index", @"The index must be non negative");
+                if (index != 0 && InnerElement.Parent == null) throw new ArgumentOutOfRangeException("index", @"For non-zero index there must be a parent for the element");
 
-                var child = InnerElement.Elements().ElementAt(index);
-                Debug.Assert(child != null);
-                return CreateInstance(child);
+                // Return ourself for zer-index, e.g. root.items[0]
+                if (index == 0) return this;
+
+                var parent = InnerElement.Parent;
+                Debug.Assert(parent != null);
+
+                // If child not exist - create it
+                XElement subElement = parent.Elements(InnerElement.Name).ElementAtOrDefault(index);
+                if (subElement == null)
+                {
+                    subElement = new XElement(InnerElement.Name);
+                    parent.Add(subElement);
+                }
+
+                return CreateInstance(subElement);
             }
             set
             {
