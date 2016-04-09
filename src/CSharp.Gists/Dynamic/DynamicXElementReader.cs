@@ -16,6 +16,7 @@ namespace CSharp.Gists.Dynamic
         public static dynamic CreateInstance(XElement element)
         {
             if (element == null) throw new ArgumentNullException("element");
+
             return new DynamicXElementReader(element);
         }
 
@@ -53,12 +54,20 @@ namespace CSharp.Gists.Dynamic
         {
             get
             {
-                if (index < 0 || index >= InnerElement.Elements().Count())
-                    throw new IndexOutOfRangeException("Index out of range");
+                if (index < 0) throw new ArgumentOutOfRangeException("index", @"The index must be non negative");
+                if (index != 0 && InnerElement.Parent == null) throw new ArgumentOutOfRangeException("index", @"For non-zero index there must be a parent for the element");
 
-                var child = InnerElement.Elements().ElementAt(index);
-                Debug.Assert(child != null);
-                return CreateInstance(child);
+                // Return ourself for zer-index, e.g. root.items[0]
+                if (index == 0) return this;
+
+                var parent = InnerElement.Parent;
+                Debug.Assert(parent != null);
+
+                // Return element with the same tag name at index position
+                var subElement = parent.Elements(InnerElement.Name).ElementAt(index);
+                Debug.Assert(subElement != null);
+
+                return subElement.AsDynamic();
             }
         }
     }

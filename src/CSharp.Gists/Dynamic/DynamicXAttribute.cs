@@ -51,13 +51,14 @@ namespace CSharp.Gists.Dynamic
                 return true;
             }
 
+            // TimeSpan can't be handled with Convert.ChangeType, threfore we parse it manually
             if (binder.ReturnType == typeof(TimeSpan))
             {
-                result = TimeSpan.Parse(m_Attribute.Value, CultureInfo.InvariantCulture);
+                result = TimeSpan.Parse(m_Attribute.Value);
                 return true;
             }
 
-            result = Convert.ChangeType(m_Attribute.Value, binder.ReturnType, CultureInfo.InvariantCulture);
+            result = Convert.ChangeType(m_Attribute.Value, binder.ReturnType);
             return true;
         }
 
